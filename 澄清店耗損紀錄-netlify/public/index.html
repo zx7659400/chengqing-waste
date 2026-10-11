@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#C9673E">
+<title>澄清店耗損紀錄</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700&display=swap">
+<style>
+/* Layout: one narrow phone column — tabs on top, the active panel below; built to be used one-handed during service. */
+:root {
+  --bg: #F8F4EF;
+  --surface: #FFFFFF;
+  --surface-2: #F3E7DC;
+  --fg: #2B211C;
+  --muted: #7A6E64;
+  --line: #E6DBCF;
+  --accent: #C9673E;
+  --accent-ink: #A6502C;
+  --accent-soft: #F6E4D8;
+  --on-accent: #FFFFFF;
+  --warn: #9B6B1F;
+  --warn-soft: #FBF0D9;
+  --bad: #B03A2E;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-display: "Noto Serif TC", "Songti TC", serif;
+  --radius: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1C1714; --surface: #26201C; --surface-2: #33291F; --fg: #F2E9E0; --muted: #B5A79A;
+    --line: #3E332B; --accent: #E0855A; --accent-ink: #F0A47E; --accent-soft: #3D2A20; --on-accent: #1C1714;
+    --warn: #E8B860; --warn-soft: #3A2E18; --bad: #F08070; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1C1714; --surface: #26201C; --surface-2: #33291F; --fg: #F2E9E0; --muted: #B5A79A;
+  --line: #3E332B; --accent: #E0855A; --accent-ink: #F0A47E; --accent-soft: #3D2A20; --on-accent: #1C1714;
+  --warn: #E8B860; --warn-soft: #3A2E18; --bad: #F08070; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; -webkit-text-size-adjust: 100%; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.5; padding: 0 16px; padding-block: 0 48px; }
+.app { max-width: 640px; margin: 0 auto; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-block: 20px 12px; flex-wrap: wrap; }
+h1 { font-family: var(--font-display); font-size: 1.5rem; margin: 0; letter-spacing: .02em; text-wrap: balance; }
+.sub { color: var(--muted); font-size: .875rem; }
+.status { font-size: .8rem; color: var(--muted); }
+.status.off { color: var(--bad); }
+
+nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding-block: 8px; }
+nav.tabs button { font: inherit; font-size: .95rem; padding: 10px 4px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 10px; cursor: pointer; }
+nav.tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 700; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+section.panel { display: flex; flex-direction: column; gap: 16px; padding-block: 8px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.label { font-size: .78rem; font-weight: 700; color: var(--muted); letter-spacing: .08em; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.seg button, .chip { font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 8px 14px; cursor: pointer; }
+.seg button { border-radius: 10px; padding: 10px; }
+.seg button[aria-pressed="true"], .chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+
+.group-title { font-size: .85rem; color: var(--muted); font-weight: 700; margin-top: 4px; }
+.items { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.item-btn { font: inherit; text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 10px; padding: 10px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.item-btn .n { font-weight: 700; overflow-wrap: anywhere; }
+.item-btn .p { font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.item-btn .p.missing { color: var(--warn); }
+.item-btn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.item-btn[aria-pressed="true"] .n { color: var(--accent-ink); }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 420px) { .form-grid { grid-template-columns: 1fr; } }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field label { font-size: .85rem; color: var(--muted); }
+input[type="text"], input[type="number"], input[type="date"], input[type="month"], select { font: inherit; width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--fg); }
+.stepper { display: grid; grid-template-columns: 44px 1fr 44px; gap: 6px; }
+.stepper button { font: inherit; font-size: 1.25rem; border: 1px solid var(--line); background: var(--surface-2); color: var(--fg); border-radius: 10px; cursor: pointer; }
+.stepper input { text-align: center; font-variant-numeric: tabular-nums; }
+.amount { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-top: 4px; border-top: 1px dashed var(--line); }
+.amount .v { font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent-ink); }
+.primary { font: inherit; font-weight: 700; background: var(--accent); color: var(--on-accent); border: 0; border-radius: 12px; padding: 14px; cursor: pointer; width: 100%; }
+.primary:disabled { opacity: .45; cursor: not-allowed; }
+.ghost { font: inherit; background: transparent; color: var(--accent-ink); border: 1px solid var(--accent); border-radius: 10px; padding: 8px 12px; cursor: pointer; }
+.small { font-size: .82rem; color: var(--muted); }
+.warnbox { background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: .88rem; }
+.empty { color: var(--muted); text-align: center; padding: 20px 8px; }
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--surface-2); border-radius: 10px; padding: 10px; min-width: 0; }
+.stat .k { font-size: .75rem; color: var(--muted); }
+.stat .v { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+.list { display: flex; flex-direction: column; }
+.entry { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.entry:last-child { border-bottom: 0; }
+.entry .t { font-weight: 700; }
+.entry .m { font-size: .82rem; color: var(--muted); }
+.entry .a { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.entry .a.missing { color: var(--warn); font-weight: 500; font-size: .85rem; }
+.entry .del { grid-column: 2; justify-self: end; font: inherit; font-size: .8rem; background: none; border: 0; color: var(--muted); cursor: pointer; padding: 2px 0; }
+.entry .del.confirm { color: var(--bad); font-weight: 700; }
+.period-h { font-size: .85rem; font-weight: 700; color: var(--accent-ink); padding-top: 8px; }
+
+.preview { white-space: pre-wrap; font-size: .88rem; background: var(--surface-2); border-radius: 10px; padding: 12px; margin: 0; font-family: var(--font-body); overflow-x: auto; }
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bar { display: grid; grid-template-columns: minmax(64px, 30%) 1fr auto; gap: 8px; align-items: center; font-size: .9rem; }
+.bar .track { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.bar .fill { height: 100%; background: var(--accent); border-radius: 999px; }
+.bar .num { font-variant-numeric: tabular-nums; font-weight: 700; }
+.bar .name { overflow-wrap: anywhere; }
+
+.item-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.item-row:last-child { border-bottom: 0; }
+.item-row.inactive { opacity: .5; }
+.pill { font-size: .72rem; border-radius: 999px; padding: 2px 8px; background: var(--surface-2); color: var(--muted); margin-left: 6px; white-space: nowrap; }
+.pill.float { background: var(--warn-soft); color: var(--warn); }
+.edit-form { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: var(--surface-2); border-radius: 10px; padding: 12px; }
+.edit-form .full { grid-column: 1 / -1; }
+.check { display: flex; align-items: center; gap: 8px; font-size: .9rem; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: .9rem; max-width: calc(100% - 32px); z-index: 20; }
+@media (prefers-reduced-motion: no-preference) { .toast { transition: opacity .2s; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>澄清店耗損紀錄</h1>
+      <div class="sub" id="todayLabel"></div>
+    </div>
+    <div class="status" id="status">連線中…</div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="功能">
+    <button role="tab" id="tab-log" aria-selected="true" data-tab="log">記錄</button>
+    <button role="tab" id="tab-day" aria-selected="false" data-tab="day">今日回報</button>
+    <button role="tab" id="tab-month" aria-selected="false" data-tab="month">本月</button>
+    <button role="tab" id="tab-items" aria-selected="false" data-tab="items">品項</button>
+  </nav>
+
+  <!-- 記錄 -->
+  <section class="panel" id="panel-log" role="tabpanel" aria-labelledby="tab-log">
+    <div class="card">
+      <div class="form-grid">
+        <div class="field">
+          <label for="byName">記錄人</label>
+          <input type="text" id="byName" placeholder="你的名字" autocomplete="off">
+        </div>
+        <div class="field">
+          <span class="label">時段</span>
+          <div class="seg" id="periodSeg">
+            <button type="button" data-p="上午" aria-pressed="true">上午</button>
+            <button type="button" data-p="下午" aria-pressed="false">下午</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="label">選品項</span>
+      <div id="itemGrid"><p class="empty">品項載入中…</p></div>
+    </div>
+
+    <div class="card" id="entryCard" hidden>
+      <div class="row" style="justify-content:space-between">
+        <strong id="selName"></strong>
+        <span class="small" id="selHint"></span>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label for="qty">數量（<span id="selUnit"></span>）</label>
+          <div class="stepper">
+            <button type="button" id="qtyMinus" aria-label="減少">−</button>
+            <input type="number" id="qty" inputmode="decimal" min="0" step="0.5" value="1">
+            <button type="button" id="qtyPlus" aria-label="增加">＋</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="price" id="priceLabel">單價</label>
+          <input type="number" id="price" inputmode="decimal" min="0" step="1" placeholder="元">
+        </div>
+      </div>
+      <div class="field">
+        <span class="label">原因</span>
+        <div class="row" id="reasonChips"></div>
+      </div>
+      <div class="field">
+        <label for="note">備註（可不填）</label>
+        <input type="text" id="note" placeholder="例如：冰錯位置、客人退回" autocomplete="off">
+      </div>
+      <div class="amount"><span class="small">耗損金額</span><span class="v" id="amountPreview">$0</span></div>
+      <div class="warnbox" id="formWarn" hidden></div>
+      <button type="button" class="primary" id="submitBtn">記錄這筆耗損</button>
+    </div>
+  </section>
+
+  <!-- 今日回報 -->
+  <section class="panel" id="panel-day" role="tabpanel" aria-labelledby="tab-day" hidden>
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div class="field" style="flex:1; min-width:150px">
+          <label for="dayPick">日期</label>
+          <input type="date" id="dayPick">
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">耗損金額</div><div class="v" id="dayTotal">$0</div></div>
+        <div class="stat"><div class="k">筆數</div><div class="v" id="dayCount">0</div></div>
+        <div class="stat"><div class="k">本月累計</div><div class="v" id="dayMonthTotal">$0</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <span class="label">明細</span>
+      <div class="list" id="dayList"></div>
+    </div>
+    <div class="card">
+      <span class="label">貼到店裡群組</span>
+      <pre class="preview" id="copyPreview"></pre>
+      <button type="button" class="primary" id="copyBtn">複製今日耗損回報</button>
+    </div>
+  </section>
+
+  <!-- 本月 -->
+  <section class="panel" id="panel-month" role="tabpanel" aria-labelledby="tab-month" hidden>
+    <div class="card">
+      <div class="field" style="max-width:220px">
+        <label for="monthPick">月份</label>
+        <input type="month" id="monthPick">
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">本月耗損</div><div class="v" id="mTotal">$0</div></div>
+        <div class="stat"><div class="k">筆數</div><div class="v" id="mCount">0</div></div>
+        <div class="stat"><div class="k">未設單價</div><div class="v" id="mMissing">0</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <span class="label">品項排行（依金額）</span>
+      <div class="bars" id="mByItem"></div>
+    </div>
+    <div class="card">
+      <span class="label">耗損原因</span>
+      <div class="bars" id="mByReason"></div>
+    </div>
+    <div class="card">
+      <span class="label">每日耗損</span>
+      <div class="bars" id="mByDay"></div>
+    </div>
+  </section>
+
+  <!-- 品項 -->
+  <section class="panel" id="panel-items" role="tabpanel" aria-labelledby="tab-items" hidden>
+    <div class="card">
+      <p class="small" style="margin:0">固定成本的品項設好單價，記錄時就會自動算金額；菜價會浮動的品項勾「浮動價」，記錄時再填當天菜價。</p>
+      <div class="warnbox" id="itemsReadonly" hidden>只有主管能修改品項與單價。</div>
+      <div class="row" id="adminBox">
+        <div class="field" style="flex:1; min-width:160px">
+          <label for="adminPw">主管密碼</label>
+          <input type="password" id="adminPw" autocomplete="current-password" placeholder="輸入後可編輯品項">
+        </div>
+        <button type="button" class="ghost" id="adminBtn" style="align-self:flex-end">解鎖編輯</button>
+      </div>
+      <div class="row" id="adminOn" hidden><span class="small">已用主管身分登入</span><button type="button" class="ghost" id="adminOut">登出</button></div>
+      <div class="list" id="itemList"></div>
+    </div>
+    <div class="card" id="addCard">
+      <span class="label">新增品項</span>
+      <div class="edit-form" style="background:transparent; padding:0">
+        <div class="field"><label for="nName">名稱</label><input type="text" id="nName" placeholder="例如：五香滷雞腿" autocomplete="off"></div>
+        <div class="field"><label for="nCat">分類</label>
+          <select id="nCat"></select></div>
+        <div class="field"><label for="nUnit">單位</label><input type="text" id="nUnit" placeholder="份／顆／斤" autocomplete="off"></div>
+        <div class="field"><label for="nPrice">單價（元）</label><input type="number" id="nPrice" inputmode="decimal" min="0" placeholder="浮動價可不填"></div>
+        <label class="check full"><input type="checkbox" id="nFloat"> 浮動價（例如菜價，記錄時再填）</label>
+        <button type="button" class="primary full" id="addItemBtn">新增品項</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+
+<div class="toast" id="toast" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>

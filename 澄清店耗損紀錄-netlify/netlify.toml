@@ -1,0 +1,13 @@
+[build]
+  publish = "public"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# 用「Deploy to Netlify」連結部署時，會在畫面上請你填這個值
+[template.environment]
+  ADMIN_PASSWORD = "主管密碼（修改品項與單價用，只給主管）"
